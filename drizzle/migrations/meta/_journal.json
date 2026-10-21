@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792610065705,
+      "tag": "0000_seed_furniture_and_reviews",
+      "breakpoints": true
+    }
+  ]
 }
