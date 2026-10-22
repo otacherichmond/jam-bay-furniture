@@ -1,24 +1,70 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+import { Footer } from "@/components/site/footer";
+import { Faq } from "@/components/site/faq";
+import { Contact } from "@/components/site/contact";
+import { Hero } from "@/components/site/hero";
+import { Navbar } from "@/components/site/navbar";
+import { ProductsSection } from "@/components/site/products-section";
+import { ReviewsSection } from "@/components/site/reviews-section";
+import { Services } from "@/components/site/services";
+import { WhyUs } from "@/components/site/why-us";
+import { getProducts, getReviews } from "@/functions/furniture";
+
+const productsQuery = queryOptions({
+  queryKey: ["products"],
+  queryFn: () => getProducts(),
+});
+
+const reviewsQuery = queryOptions({
+  queryKey: ["reviews"],
+  queryFn: () => getReviews(),
+});
+
 export const Route = createFileRoute("/")({
+  loader: ({ context }) => {
+    context.queryClient.ensureQueryData(productsQuery);
+    context.queryClient.ensureQueryData(reviewsQuery);
+  },
+  head: () => ({
+    meta: [
+      { title: "Jam & Bay Furniture — Handcrafted Furniture in Abuja" },
+      {
+        name: "description",
+        content:
+          "Sofas, beds, wardrobes, office furniture, kitchen cabinets and doors — designed, built and delivered from our own workshop in Wuse, Abuja. Custom sizes, durable materials, free quotes on WhatsApp.",
+      },
+      { property: "og:title", content: "Jam & Bay Furniture — Handcrafted Furniture in Abuja" },
+      {
+        property: "og:description",
+        content:
+          "Sofas, beds, wardrobes, office furniture and kitchen cabinets built by hand in Wuse, Abuja. Custom designs, delivery and installation.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const { data: products } = useSuspenseQuery(productsQuery);
+  const { data: reviews } = useSuspenseQuery(reviewsQuery);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main>
+        <Hero />
+        <Services />
+        <ProductsSection products={products} />
+        <WhyUs />
+        <ReviewsSection reviews={reviews} />
+        <Faq />
+        <Contact />
+      </main>
+      <Footer />
     </div>
   );
 }

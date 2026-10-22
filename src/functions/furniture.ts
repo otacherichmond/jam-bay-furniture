@@ -86,6 +86,19 @@ export const getReviews = createServerFn({ method: "GET" }).handler(async () => 
 
 // ---------- Admin (passcode-gated) ----------
 
+export const adminListReviews = createServerFn({ method: "POST" })
+  .inputValidator((input: { passcode: string }) => input)
+  .handler(async ({ data }) => {
+    if (!checkPasscode(data.passcode)) forbidden();
+    const supabase = await getAdminClient();
+    const { data: rows, error } = await supabase
+      .from("customer_reviews")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(`Could not load reviews: ${error.message}`);
+    return (rows ?? []) as ReviewRow[];
+  });
+
 async function getAdminClient() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
