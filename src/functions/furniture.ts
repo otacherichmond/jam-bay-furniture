@@ -86,7 +86,7 @@ export const getReviews = createServerFn({ method: "GET" }).handler(async () => 
 
 // ---------- Admin (passcode-gated) ----------
 
-export const adminListReviews = createServerFn({ method: "GET" })
+export const adminListReviews = createServerFn({ method: "POST" })
   .inputValidator((input: { passcode: string }) => input)
   .handler(async ({ data }) => {
     if (!checkPasscode(data.passcode)) forbidden();
