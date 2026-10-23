@@ -19,6 +19,7 @@ import {
   adminDeleteReview,
   adminListReviews,
   adminUploadImage,
+  getProducts,
   type ProductRow,
   type ReviewRow,
 } from "@/functions/furniture";
@@ -148,17 +149,17 @@ function Dashboard({ passcode }: { passcode: string }) {
   const [products, setProducts] = useState<ProductRow[] | null>(null);
   const [reviews, setReviews] = useState<ReviewRow[] | null>(null);
 
+  const getProductsFn = useServerFn(getProducts);
+  const listReviewsFn = useServerFn(adminListReviews);
+
   const reload = useCallback(async () => {
-    const [{ getProducts }, listReviewsFnLocal] = await Promise.all([
-      import("@/functions/furniture"),
-      Promise.resolve(adminListReviews),
+    const [productRows, reviewRows] = await Promise.all([
+      getProductsFn(),
+      listReviewsFn({ data: { passcode } }),
     ]);
-    // Direct calls are server functions; useServerFn is required only for
-    // router-aware call sites, event-handler calls below use the wrappers.
-    setProducts(await getProducts());
-    setReviews(await adminListReviews({ data: { passcode } }));
-    void listReviewsFnLocal;
-  }, [passcode]);
+    setProducts(productRows);
+    setReviews(reviewRows);
+  }, [passcode, getProductsFn, listReviewsFn]);
 
   useEffect(() => {
     void reload();
