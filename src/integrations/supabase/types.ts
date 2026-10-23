@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          id: number
+          passcode_hash: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          passcode_hash: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          passcode_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_reviews: {
         Row: {
           comment: string
