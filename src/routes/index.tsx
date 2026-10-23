@@ -23,10 +23,11 @@ const reviewsQuery = queryOptions({
 });
 
 export const Route = createFileRoute("/")({
-  loader: ({ context }) => {
-    context.queryClient.ensureQueryData(productsQuery);
-    context.queryClient.ensureQueryData(reviewsQuery);
-  },
+  loader: ({ context }) =>
+    Promise.all([
+      context.queryClient.ensureQueryData(productsQuery),
+      context.queryClient.ensureQueryData(reviewsQuery),
+    ]),
   head: () => ({
     meta: [
       { title: "Jam & Bay Furniture — Handcrafted Furniture in Abuja" },
