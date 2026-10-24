@@ -185,8 +185,6 @@ async function getAdminClient() {
 export const adminAddProduct = createServerFn({ method: "POST" })
   .inputValidator((input: { passcode: string; product: ProductInput }) => input)
   .handler(async ({ data }) => {
-    if (!checkPasscode(data.passcode)) forbidden();
-
     const product = data.product;
     if (!product.name?.trim()) throw new Error("Product name is required");
     if (!Number.isInteger(product.price) || product.price <= 0) {
@@ -218,8 +216,8 @@ export const adminAddProduct = createServerFn({ method: "POST" })
 export const adminDeleteProduct = createServerFn({ method: "POST" })
   .inputValidator((input: { passcode: string; id: string }) => input)
   .handler(async ({ data }) => {
-    if (!checkPasscode(data.passcode)) forbidden();
     const supabase = await getAdminClient();
+    if (!(await checkPasscode(supabase, data.passcode))) forbidden();
     const { error } = await supabase
       .from("furniture_products")
       .delete()
@@ -231,8 +229,6 @@ export const adminDeleteProduct = createServerFn({ method: "POST" })
 export const adminAddReview = createServerFn({ method: "POST" })
   .inputValidator((input: { passcode: string; review: ReviewInput }) => input)
   .handler(async ({ data }) => {
-    if (!checkPasscode(data.passcode)) forbidden();
-
     const review = data.review;
     if (!review.customer_name?.trim()) throw new Error("Customer name is required");
     if (!review.comment?.trim()) throw new Error("Review text is required");
@@ -241,6 +237,7 @@ export const adminAddReview = createServerFn({ method: "POST" })
     }
 
     const supabase = await getAdminClient();
+    if (!(await checkPasscode(supabase, data.passcode))) forbidden();
     const { data: inserted, error } = await supabase
       .from("customer_reviews")
       .insert({
@@ -259,8 +256,8 @@ export const adminAddReview = createServerFn({ method: "POST" })
 export const adminDeleteReview = createServerFn({ method: "POST" })
   .inputValidator((input: { passcode: string; id: string }) => input)
   .handler(async ({ data }) => {
-    if (!checkPasscode(data.passcode)) forbidden();
     const supabase = await getAdminClient();
+    if (!(await checkPasscode(supabase, data.passcode))) forbidden();
     const { error } = await supabase
       .from("customer_reviews")
       .delete()
@@ -269,15 +266,32 @@ export const adminDeleteReview = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+export const adminChangePasscode = createServerFn({ method: "POST" })
+  .inputValidator((input: { passcode: string; newPasscode: string }) => input)
+  .handler(async ({ data }) => {
+    if (typeof data.newPasscode !== "string" || data.newPasscode.length < 8) {
+      throw new Error("The new passcode must be at least 8 characters long");
+    }
+    const supabase = await getAdminClient();
+    if (!(await checkPasscode(supabase, data.passcode))) forbidden();
+
+    const hash = await hashPasscode(data.newPasscode);
+    const { error } = await supabase
+      .from("admin_settings")
+      .upsert({ id: 1, passcode_hash: hash, updated_at: new Date().toISOString() });
+    if (error) throw new Error(`Could not update passcode: ${error.message}`);
+    return { success: true };
+  });
+
 export const adminUploadImage = createServerFn({ method: "POST" })
   .inputValidator(
     (input: { passcode: string; filename: string; contentType: string; base64: string }) => input,
   )
   .handler(async ({ data }) => {
-    if (!checkPasscode(data.passcode)) forbidden();
+    const supabase = await getAdminClient();
+    if (!(await checkPasscode(supabase, data.passcode))) forbidden();
     if (data.base64.length > 12_000_000) throw new Error("Image is too large (max ~8 MB)");
 
-    const supabase = await getAdminClient();
     const ext = (data.filename.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
     const path = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext || "jpg"}`;
 
