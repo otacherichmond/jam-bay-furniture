@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   adminAddProduct,
   adminAddReview,
+  adminChangePasscode,
   adminDeleteProduct,
   adminDeleteReview,
   adminListReviews,
@@ -106,7 +107,13 @@ function AdminPage() {
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         ) : unlocked ? (
-          <Dashboard passcode={passcode} />
+          <Dashboard
+            passcode={passcode}
+            onPasscodeChanged={(newPasscode) => {
+              sessionStorage.setItem(PASSCODE_KEY, newPasscode);
+              setPasscode(newPasscode);
+            }}
+          />
         ) : (
           <div className="mx-auto max-w-sm">
             <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
@@ -145,7 +152,13 @@ function AdminPage() {
   );
 }
 
-function Dashboard({ passcode }: { passcode: string }) {
+function Dashboard({
+  passcode,
+  onPasscodeChanged,
+}: {
+  passcode: string;
+  onPasscodeChanged: (newPasscode: string) => void;
+}) {
   const [products, setProducts] = useState<ProductRow[] | null>(null);
   const [reviews, setReviews] = useState<ReviewRow[] | null>(null);
 
@@ -177,7 +190,93 @@ function Dashboard({ passcode }: { passcode: string }) {
     <div className="grid gap-10 lg:grid-cols-2">
       <ProductsPanel products={products} passcode={passcode} onChanged={reload} />
       <ReviewsPanel reviews={reviews} passcode={passcode} onChanged={reload} />
+      <PasscodePanel passcode={passcode} onPasscodeChanged={onPasscodeChanged} />
     </div>
+  );
+}
+
+function PasscodePanel({
+  passcode,
+  onPasscodeChanged,
+}: {
+  passcode: string;
+  onPasscodeChanged: (newPasscode: string) => void;
+}) {
+  const changeFn = useServerFn(adminChangePasscode);
+
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  async function handleChange(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const newPasscode = String(fd.get("new_passcode") ?? "");
+    const confirm = String(fd.get("confirm_passcode") ?? "");
+    setError("");
+    setMessage("");
+    if (newPasscode.length < 8) {
+      setError("The new passcode must be at least 8 characters long.");
+      return;
+    }
+    if (newPasscode !== confirm) {
+      setError("The two new passcodes do not match.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await changeFn({ data: { passcode, newPasscode } });
+      form.reset();
+      onPasscodeChanged(newPasscode);
+      setMessage("Passcode updated. Use the new one next time you unlock.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update passcode");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const inputCls =
+    "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus:border-[var(--accent)]";
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-6 shadow-sm lg:col-span-2">
+      <PanelHeading icon={Lock} title="Change admin passcode" />
+      <p className="mt-2 text-sm text-muted-foreground">
+        Your passcode is stored securely (never visible in plain text) and only you can change it.
+      </p>
+      <form onSubmit={handleChange} className="mt-4 grid max-w-md gap-3">
+        <input
+          name="new_passcode"
+          type="password"
+          required
+          minLength={8}
+          placeholder="New passcode (at least 8 characters) *"
+          autoComplete="new-password"
+          className={inputCls}
+        />
+        <input
+          name="confirm_passcode"
+          type="password"
+          required
+          minLength={8}
+          placeholder="Repeat new passcode *"
+          autoComplete="new-password"
+          className={inputCls}
+        />
+        <button
+          type="submit"
+          disabled={saving}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+          Update passcode
+        </button>
+        {message ? <p className="text-sm text-primary">{message}</p> : null}
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      </form>
+    </section>
   );
 }
 
@@ -188,7 +287,7 @@ function PanelHeading({
 }: {
   icon: typeof Package;
   title: string;
-  count: number;
+  count?: number;
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -196,9 +295,11 @@ function PanelHeading({
         <Icon className="h-5 w-5 text-primary" />
         {title}
       </h2>
-      <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
-        {count}
-      </span>
+      {count !== undefined ? (
+        <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
+          {count}
+        </span>
+      ) : null}
     </div>
   );
 }
