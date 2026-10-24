@@ -167,8 +167,8 @@ export const getReviews = createServerFn({ method: "GET" }).handler(async () => 
 export const adminListReviews = createServerFn({ method: "POST" })
   .inputValidator((input: { passcode: string }) => input)
   .handler(async ({ data }) => {
-    if (!checkPasscode(data.passcode)) forbidden();
     const supabase = await getAdminClient();
+    if (!(await checkPasscode(supabase, data.passcode))) forbidden();
     const { data: rows, error } = await supabase
       .from("customer_reviews")
       .select("*")
@@ -194,6 +194,7 @@ export const adminAddProduct = createServerFn({ method: "POST" })
     }
 
     const supabase = await getAdminClient();
+    if (!(await checkPasscode(supabase, data.passcode))) forbidden();
     const { data: inserted, error } = await supabase
       .from("furniture_products")
       .insert({
