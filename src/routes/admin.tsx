@@ -242,7 +242,7 @@ function PasscodePanel({
 
   return (
     <section className="rounded-2xl border border-border bg-card p-6 shadow-sm lg:col-span-2">
-      <PanelHeading icon={Lock} title="Change admin passcode" count={0} />
+      <PanelHeading icon={Lock} title="Change admin passcode" />
       <p className="mt-2 text-sm text-muted-foreground">
         Your passcode is stored securely (never visible in plain text) and only you can change it.
       </p>
@@ -287,7 +287,7 @@ function PanelHeading({
 }: {
   icon: typeof Package;
   title: string;
-  count: number;
+  count?: number;
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -295,9 +295,11 @@ function PanelHeading({
         <Icon className="h-5 w-5 text-primary" />
         {title}
       </h2>
-      <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
-        {count}
-      </span>
+      {count !== undefined ? (
+        <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
+          {count}
+        </span>
+      ) : null}
     </div>
   );
 }
