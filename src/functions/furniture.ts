@@ -73,7 +73,7 @@ function timingSafeEqualBytes(a: Uint8Array, b: Uint8Array): boolean {
 
 async function deriveBits(
   passcode: string,
-  salt: Uint8Array<ArrayBuffer>,
+  salt: Uint8Array,
   iterations: number,
   bitLength: number,
 ) {
