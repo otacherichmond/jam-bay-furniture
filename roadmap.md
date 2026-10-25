@@ -9,3 +9,6 @@
 7. [x] Admin page /admin (passcode-protected) for adding products & reviews
 8. [x] WhatsApp deep links (wa.me/2349162340000) for inquiries and custom orders
 9. [x] Verify: build, DB reads, filters, admin flow (tests + Playwright E2E, incl. upload & image proxy)
+10. [x] Passcode change feature (hashed in DB, changeable from /admin) — verified end-to-end
+11. [ ] Vercel deployment support (user wants site on Vercel; currently errors)
+12. [ ] Update AGENTS.md rule for hashed passcode in admin_settings
