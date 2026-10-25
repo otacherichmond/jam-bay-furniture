@@ -11,7 +11,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 //   Cloudflare preset; the Lovable config forces it in its own environment.
 // - Vercel (VERCEL=1 during Vercel builds) gets the Nitro `vercel` preset so
 //   `vite build` emits the Vercel Build Output API (.vercel/output).
-const nitroForVercel = process.env.VERCEL
+const nitroForVercel = process.env["VERCEL"]
   ? ({ preset: "vercel" } as const)
   : undefined;
 
