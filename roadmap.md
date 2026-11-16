@@ -1,4 +1,6 @@
-# Roadmap — Jam & Bay Furniture website
+# Roadmap — W Classic Furniture website
+
+13. [ ] Replace Jam & Bay branding, contact details, hours, products and reviews with W Classic Furniture information.
 
 1. [x] Enable Lovable Cloud (Supabase backend)
 2. [x] Generate hero + product images
